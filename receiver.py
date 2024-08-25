@@ -6,6 +6,7 @@ PORT = 8080
 ADDR = (IP, PORT)
 SIZE = 4096
 FORMAT = 'utf-8'
+OUTPUT_DIR = "received/"
 
 if __name__ == '__main__':
     # set up server
@@ -14,16 +15,19 @@ if __name__ == '__main__':
     server.listen(5)
     print(f"Listening on {ADDR}.")
 
-    # accept connection loop
-    while True:
-        con, addr = server.accept()
-        print(f"Accepted connection from {addr}")
-        # receive data loop
-        while chunk := con.recv(SIZE):
-            if not chunk:
-                break
-            print(chunk)
-        con.close()
-        break
+    con, addr = server.accept()
+    with con:
+        print(f'connected to {addr}')
 
-    server.close()
+        filename = con.recv(SIZE).decode(FORMAT).strip()
+        print(f'receiving file: {filename}')
+
+        with open(OUTPUT_DIR+filename, 'wb') as f:
+            # receiving loop
+            while True:
+                data = con.recv(SIZE)
+                if not data:
+                    break
+                f.write(data)
+
+    print("file successfully received")

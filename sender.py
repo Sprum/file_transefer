@@ -1,20 +1,27 @@
+import os.path
 import socket
-import random
 
 IP = socket.gethostbyname(socket.gethostname())
 PORT = 8080
 ADDR = (IP, PORT)
 SIZE = 4096
 FORMAT = 'utf-8'
+FILE_PATH = ""
 
 if __name__ == '__main__':
+    FILE_PATH = input("Enter file path: ")
+    filename = os.path.basename(FILE_PATH)
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect(ADDR)
     print(f"connected to {client.getpeername()}")
 
-    # simulate data
-    data = random.randbytes(41984)
+    # send file name
+    client.sendall(filename.encode(FORMAT))
 
-    # send data
-    client.send(data)
-    client.send(b"close")
+    # read and send data
+    with open(FILE_PATH, 'rb') as f:
+        while chunk := f.read(SIZE):
+            client.sendall(chunk)
+
+    print("file successfully sent!")
+    client.close()
